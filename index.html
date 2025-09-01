@@ -212,6 +212,10 @@
                 <label for="sets">組數</label>
                 <input type="number" id="sets" value="5" min="1">
             </div>
+            <div class="setting-group">
+                <label for="sound-duration">響聲秒數</label>
+                <input type="number" id="sound-duration" value="0.4" min="0.1" step="0.1">
+            </div>
         </div>
         <div id="countdown-status" class="status-display">組數: 5</div>
         <div class="display-area" id="countdown-display">30</div>
@@ -269,54 +273,75 @@
     <script>
         // --- 通用功能 (Web Audio API 版本) ---
         let audioCtx;
+        const soundDurationInput = document.getElementById('sound-duration');
 
-        // 初始化音訊上下文，這必須由使用者操作觸發 (例如點擊)
         function unlockAudio() {
             if (!audioCtx) {
                 try {
-                    // 建立一個新的音訊上下文
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    console.log("AudioContext created successfully.");
-                } catch (e) {
-                    console.error("Web Audio API is not supported in this browser.");
-                    return;
-                }
+                } catch (e) { console.error("Web Audio API is not supported in this browser."); return; }
             }
-            // 如果音訊上下文因瀏覽器自動播放政策而被暫停，則恢復它
             if (audioCtx.state === 'suspended') {
-                audioCtx.resume().then(() => console.log("AudioContext resumed successfully."));
+                audioCtx.resume();
             }
         }
 
-        // 播放聲音的函式
+        // **修改**: 採用振幅調變 (AM) 產生哨音
         function playSound(type = 'start') {
-            if (!audioCtx) {
-                console.warn("AudioContext not ready, cannot play sound.");
-                return;
-            }
+            if (!audioCtx) return;
 
-            const oscillator = audioCtx.createOscillator(); // 建立一個振盪器 (用來產生聲波)
-            const gainNode = audioCtx.createGain(); // 建立一個音量控制器
-
-            // 根據類型設定不同的頻率和持續時間
-            const frequency = (type === 'start') ? 880.0 : 440.0; // 開始音較高，結束音較低
-            const duration = (type === 'start') ? 0.15 : 0.2;
-
-            oscillator.type = 'sine'; // 使用正弦波
-            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime); // 設定頻率
+            const now = audioCtx.currentTime;
             
-            // 建立一個短促的音量包絡，避免爆音
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.01);
-            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+            if (type === 'start') {
+                const duration = parseFloat(soundDurationInput.value) || 0.4;
 
-            // 連接節點：振盪器 -> 音量 -> 喇叭
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
+                // 1. 主要聲音 (高頻)
+                const mainOscillator = audioCtx.createOscillator();
+                mainOscillator.type = 'sine';
+                mainOscillator.frequency.setValueAtTime(2500, now); // 哨音基頻
 
-            // 開始播放並在指定時間後停止
-            oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + duration);
+                // 2. LFO (低頻振盪器)，用來產生震動感
+                const lfo = audioCtx.createOscillator();
+                lfo.type = 'square';
+                lfo.frequency.setValueAtTime(40, now); // 震動速度
+
+                // 3. LFO的音量控制器，用來控制震動深度
+                const lfoGain = audioCtx.createGain();
+                lfoGain.gain.setValueAtTime(0.25, now);
+
+                // 4. 主要音量控制器
+                const mainGain = audioCtx.createGain();
+                
+                // 連接節點：LFO -> LFO音量 -> 控制主要音量
+                lfo.connect(lfoGain);
+                lfoGain.connect(mainGain.gain);
+
+                // 主要聲音 -> 主要音量 -> 喇叭
+                mainOscillator.connect(mainGain);
+                mainGain.connect(audioCtx.destination);
+                
+                // 5. 設定 "突然停止" 的音量包絡
+                mainGain.gain.setValueAtTime(0.5, now); // 瞬間開始
+                mainGain.gain.setValueAtTime(0, now + duration); // 在指定時間瞬間停止
+
+                // 啟動與停止
+                lfo.start(now);
+                mainOscillator.start(now);
+                lfo.stop(now + duration);
+                mainOscillator.stop(now + duration);
+
+            } else { // 結束音保持簡單
+                const endOscillator = audioCtx.createOscillator();
+                const endGain = audioCtx.createGain();
+                endOscillator.connect(endGain);
+                endGain.connect(audioCtx.destination);
+                endOscillator.type = 'triangle';
+                endOscillator.frequency.setValueAtTime(440, now);
+                endGain.gain.setValueAtTime(0.5, now);
+                endGain.gain.exponentialRampToValueAtTime(0.00001, now + 0.2);
+                endOscillator.start(now);
+                endOscillator.stop(now + 0.2);
+            }
         }
 
         function openTab(evt, tabName) {
@@ -359,61 +384,56 @@
             totalSets = parseInt(setsInput.value);
             currentSet = 1;
             countdownSeconds = parseInt(workTimeInput.value);
-            updateCountdownDisplay();
+            countdownDisplay.textContent = countdownSeconds;
             statusDisplay.textContent = `組數: ${totalSets}`;
             document.getElementById('countdown-start').style.display = 'block';
             document.getElementById('countdown-pause').style.display = 'none';
         }
 
         function startCountdown() {
-            unlockAudio(); // 每次開始時都確保音訊已解鎖
-
+            unlockAudio();
             if (isCountdownPaused) {
                 isCountdownPaused = false;
             } else {
-                resetCountdown(); // 重設以確保從乾淨的狀態開始
-                totalSets = parseInt(setsInput.value);
-                currentSet = 1;
-                countdownSeconds = parseInt(workTimeInput.value);
-                isWorkTime = true;
+                resetCountdown();
             }
-            
             playSound('start');
-            updateCountdownDisplay(); // 立即更新顯示
-            countdownTimer = setInterval(() => {
-                countdownSeconds--;
-                updateCountdownDisplay();
 
-                if (countdownSeconds < 0) {
-                    playSound('end');
-                    if (isWorkTime) { 
+            countdownTimer = setInterval(() => {
+                if (countdownSeconds > 1) {
+                    countdownSeconds--;
+                    updateCountdownDisplay();
+                } else {
+                    if (isWorkTime) {
                         const restTime = parseInt(restTimeInput.value);
+                        if (currentSet >= totalSets && restTime <= 0) {
+                            playSound('end');
+                            statusDisplay.textContent = "完成！";
+                            resetCountdown();
+                            return;
+                        }
                         if (restTime > 0) {
                             isWorkTime = false;
                             countdownSeconds = restTime;
                             playSound('start');
                         } else {
-                             if (currentSet >= totalSets) {
-                                statusDisplay.textContent = "完成！";
-                                resetCountdown();
-                                return;
-                            }
                             currentSet++;
                             countdownSeconds = parseInt(workTimeInput.value);
                             playSound('start');
                         }
-                    } else { 
+                    } else {
                         isWorkTime = true;
                         currentSet++;
                         if (currentSet > totalSets) {
+                            playSound('end');
                             statusDisplay.textContent = "完成！";
                             resetCountdown();
-                        } else {
-                            countdownSeconds = parseInt(workTimeInput.value);
-                            playSound('start');
+                            return;
                         }
+                        countdownSeconds = parseInt(workTimeInput.value);
+                        playSound('start');
                     }
-                     updateCountdownDisplay(); // 切換後立即更新
+                    updateCountdownDisplay();
                 }
             }, 1000);
 
@@ -535,7 +555,6 @@
 
         function startInterval() {
             unlockAudio();
-
             if(isIntervalPaused){
                 isIntervalPaused = false;
             } else {
@@ -544,14 +563,14 @@
             if (intervalTimes.length === 0) return;
             
             playSound('start');
-            updateIntervalDisplay();
+            
             intervalTimer = setInterval(() => {
-                intervalSeconds--;
-                updateIntervalDisplay();
-
-                if (intervalSeconds < 0) {
+                if (intervalSeconds > 1) {
+                    intervalSeconds--;
+                    updateIntervalDisplay();
+                } else {
                     currentIntervalIndex++;
-                    if (currentIntervalIndex >= intervalTimes.length) { 
+                    if (currentIntervalIndex >= intervalTimes.length) {
                         currentIntervalIndex = 0;
                         intervalCurrentSet++;
                         if (intervalCurrentSet > intervalTotalSets) {
