@@ -268,23 +268,50 @@
 
     <script>
         // --- 通用功能 ---
-        
-        let isAudioUnlocked = false;
 
-        // **FINAL FIX**: Replaced previous WAV with a universally compatible, standard sine-wave beep.
-        const whistleSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABgATGF2ZjYwLjMuMTAwAGRhdGEeAAAAAAA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8APwA/AD8A");
-        const endSound = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABgATGF2ZjYwLjMuMTAwAGRhdGEgAAAAAAD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A");
+        // **FINAL FIX**: Using Web Audio API to generate sound dynamically.
+        // This is the most compatible method and avoids all file decoding issues.
+        let audioCtx;
 
         function unlockAudio() {
-            if (isAudioUnlocked) return;
-            whistleSound.play().catch(() => {});
-            whistleSound.pause();
-            whistleSound.currentTime = 0;
-            endSound.play().catch(() => {});
-            endSound.pause();
-            endSound.currentTime = 0;
-            isAudioUnlocked = true;
-            console.log('Audio unlocked by user interaction.');
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.error("Web Audio API is not supported in this browser.");
+                    return;
+                }
+            }
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type = 'start') {
+            if (!audioCtx) {
+                console.warn("AudioContext not ready, cannot play sound.");
+                return;
+            }
+
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            const frequency = (type === 'start') ? 880.0 : 440.0; // Higher pitch for start, lower for end
+            const duration = (type === 'start') ? 0.15 : 0.2;
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
         }
 
         function openTab(evt, tabName) {
@@ -345,19 +372,19 @@
                 isWorkTime = true;
             }
             
-            whistleSound.play();
+            playSound('start');
             countdownTimer = setInterval(() => {
                 countdownSeconds--;
                 updateCountdownDisplay();
 
                 if (countdownSeconds <= 0) {
-                    endSound.play();
+                    playSound('end');
                     if (isWorkTime) { 
                         const restTime = parseInt(restTimeInput.value);
                         if (restTime > 0) {
                             isWorkTime = false;
                             countdownSeconds = restTime;
-                            whistleSound.play();
+                            playSound('start');
                         } else {
                              if (currentSet >= totalSets) {
                                 statusDisplay.textContent = "完成！";
@@ -366,7 +393,7 @@
                             }
                             currentSet++;
                             countdownSeconds = parseInt(workTimeInput.value);
-                            whistleSound.play();
+                            playSound('start');
                         }
                     } else { 
                         isWorkTime = true;
@@ -376,7 +403,7 @@
                             resetCountdown();
                         } else {
                             countdownSeconds = parseInt(workTimeInput.value);
-                            whistleSound.play();
+                            playSound('start');
                         }
                     }
                 }
@@ -433,7 +460,7 @@
 
         document.getElementById('stopwatch-start').addEventListener('click', () => {
             unlockAudio();
-            whistleSound.play();
+            playSound('start');
             stopwatchStartTime = Date.now() - stopwatchElapsedTime;
             stopwatchTimer = setInterval(updateStopwatch, 10);
             document.getElementById('stopwatch-start').style.display = 'none';
@@ -488,7 +515,7 @@
             intervalTotalSets = parseInt(intervalSetsInput.value);
             intervalCurrentSet = 1;
             currentIntervalIndex = 0;
-            intervalSeconds = intervalTimes[0] || 0; // handle case with no inputs
+            intervalSeconds = intervalTimes[0] || 0;
             intervalDisplay.textContent = intervalSeconds;
             intervalStatus.textContent = `組數: ${intervalTotalSets}`;
             document.getElementById('interval-start').style.display = 'block';
@@ -503,9 +530,9 @@
             } else {
                 resetInterval();
             }
-            if (intervalTimes.length === 0) return; // Don't start if no times are set
+            if (intervalTimes.length === 0 || !intervalTimes.every(t => t > 0)) return;
             
-            whistleSound.play();
+            playSound('start');
             intervalTimer = setInterval(() => {
                 intervalSeconds--;
                 updateIntervalDisplay();
@@ -516,14 +543,14 @@
                         currentIntervalIndex = 0;
                         intervalCurrentSet++;
                         if (intervalCurrentSet > intervalTotalSets) {
-                             endSound.play();
+                             playSound('end');
                              intervalStatus.textContent = '完成！';
                              resetInterval();
                              return;
                         }
                     }
                     intervalSeconds = intervalTimes[currentIntervalIndex];
-                    whistleSound.play();
+                    playSound('start');
                     updateIntervalDisplay();
                 }
             }, 1000);
@@ -543,7 +570,7 @@
             intervalInputsContainer.appendChild(newGroup);
             newGroup.querySelector('.btn-remove').addEventListener('click', (e) => {
                 e.target.parentElement.remove();
-                // Re-number labels
+                
                 const labels = intervalInputsContainer.querySelectorAll('label');
                 labels.forEach((label, index) => {
                     label.textContent = `時間 ${index + 1} (秒):`;
