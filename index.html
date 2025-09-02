@@ -103,6 +103,7 @@
         .btn-pause { background-color: var(--primary-color); color: white; }
         .btn-reset { background-color: var(--danger-color); color: white; }
         .btn-lap { background-color: #6c757d; color: white; }
+        .btn-fullscreen { background-color: #17a2b8; color: white; }
         
         /* --- 設定區域 --- */
         .setting-group {
@@ -117,7 +118,7 @@
             color: #ccc;
         }
         
-        .setting-group input[type="number"] {
+        .setting-group input[type="number"], .setting-group input[type="range"] {
             font-size: var(--font-size-medium);
             width: 120px;
             padding: 10px;
@@ -127,65 +128,50 @@
             border: 2px solid #555;
             border-radius: 10px;
         }
-        /* 隱藏 input number 的箭頭 */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
-          -webkit-appearance: none; 
-          margin: 0; 
+          -webkit-appearance: none; margin: 0; 
         }
-        input[type=number] {
-          -moz-appearance: textfield;
-        }
+        input[type=number] { -moz-appearance: textfield; }
         
         /* --- 碼表專用 --- */
         #lap-list {
-            list-style: none;
-            padding: 0;
-            width: 100%;
-            max-width: 600px;
-            text-align: center;
-            font-size: var(--font-size-small);
-            max-height: 200px;
-            overflow-y: auto;
+            list-style: none; padding: 0; width: 100%; max-width: 600px; text-align: center;
+            font-size: var(--font-size-small); max-height: 200px; overflow-y: auto;
         }
-        #lap-list li {
-            padding: 10px;
-            border-bottom: 1px solid #444;
-        }
-        #lap-list li:nth-child(even) {
-            background-color: var(--dark-color);
-        }
+        #lap-list li { padding: 10px; border-bottom: 1px solid #444; }
+        #lap-list li:nth-child(even) { background-color: var(--dark-color); }
 
         /* --- 多重計時器 --- */
         #interval-inputs {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
-            max-width: 500px;
+            display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 500px;
         }
-        .interval-input-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .interval-input-group input {
-            width: 100px;
-        }
-        .btn-add {
-            background-color: var(--primary-color); color: white; font-size: var(--font-size-small); padding: 10px 20px;
-        }
-        .btn-remove {
-            background-color: var(--danger-color); color: white; font-size: var(--font-size-small); padding: 10px 20px;
-        }
+        .interval-input-group { display: flex; align-items: center; gap: 10px; }
+        .interval-input-group input { width: 100px; }
+        .btn-add { background-color: var(--primary-color); color: white; font-size: var(--font-size-small); padding: 10px 20px; }
+        .btn-remove { background-color: var(--danger-color); color: white; font-size: var(--font-size-small); padding: 10px 20px; }
         
         /* --- 狀態顯示 --- */
         .status-display {
-            font-size: var(--font-size-medium);
-            font-weight: bold;
-            padding: 10px 0;
-            height: 50px; /* 確保有固定高度 */
-            color: #ccc;
+            font-size: var(--font-size-medium); font-weight: bold; padding: 10px 0;
+            height: 50px; color: #ccc;
+        }
+        
+        /* --- **新增**: 全螢幕模式樣式 --- */
+        body.fullscreen-active .tabs,
+        body.fullscreen-active .settings,
+        body.fullscreen-active .controls .btn:not(.fullscreen-toggle-btn) {
+            display: none;
+        }
+        body.fullscreen-active .tab-content.active {
+            justify-content: center;
+        }
+        body.fullscreen-active .controls {
+            padding: 0;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
         }
     </style>
 </head>
@@ -216,6 +202,11 @@
                 <label for="sound-duration">響聲秒數</label>
                 <input type="number" id="sound-duration" value="0.4" min="0.1" step="0.1">
             </div>
+            <!-- **新增**: 音量滑桿 -->
+            <div class="setting-group">
+                <label for="volume-slider">音量</label>
+                <input type="range" id="volume-slider" value="1" min="1" max="3" step="0.1">
+            </div>
         </div>
         <div id="countdown-status" class="status-display">組數: 5</div>
         <div class="display-area" id="countdown-display">30</div>
@@ -223,17 +214,20 @@
             <button class="btn btn-start" id="countdown-start">開始</button>
             <button class="btn btn-pause" id="countdown-pause" style="display:none;">暫停</button>
             <button class="btn btn-reset" id="countdown-reset">重設</button>
+            <button class="btn btn-fullscreen" data-target="countdown">最大化</button>
         </div>
     </div>
 
     <!-- 2. 碼錶 -->
     <div id="stopwatch" class="tab-content">
+        <div id="stopwatch-status" class="status-display" style="height:50px;"></div>
         <div class="display-area" id="stopwatch-display">00:00:00</div>
         <div class="controls">
             <button class="btn btn-start" id="stopwatch-start">開始</button>
             <button class="btn btn-pause" id="stopwatch-pause" style="display:none;">暫停</button>
             <button class="btn btn-reset" id="stopwatch-reset">重設</button>
             <button class="btn btn-lap" id="stopwatch-lap">計次</button>
+            <button class="btn btn-fullscreen" data-target="stopwatch">最大化</button>
         </div>
         <ul id="lap-list"></ul>
     </div>
@@ -250,10 +244,6 @@
                     <label>時間 2 (秒):</label>
                     <input type="number" class="interval-time" value="5" min="1">
                 </div>
-                 <div class="interval-input-group">
-                    <label>時間 3 (秒):</label>
-                    <input type="number" class="interval-time" value="1" min="1">
-                </div>
             </div>
             <div class="setting-group">
                 <label for="interval-sets">循環組數</label>
@@ -267,77 +257,67 @@
             <button class="btn btn-start" id="interval-start">開始</button>
             <button class="btn btn-pause" id="interval-pause" style="display:none;">暫停</button>
             <button class="btn btn-reset" id="interval-reset">重設</button>
+            <button class="btn btn-fullscreen" data-target="interval">最大化</button>
         </div>
     </div>
 
     <script>
-        // --- 通用功能 (Web Audio API 版本) ---
+        // --- 通用功能 ---
         let audioCtx;
         const soundDurationInput = document.getElementById('sound-duration');
+        const volumeSlider = document.getElementById('volume-slider');
 
         function unlockAudio() {
             if (!audioCtx) {
                 try {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                } catch (e) { console.error("Web Audio API is not supported in this browser."); return; }
+                } catch (e) { console.error("Web Audio API is not supported."); return; }
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        // **修改**: 採用振幅調變 (AM) 產生哨音
         function playSound(type = 'start') {
             if (!audioCtx) return;
-
             const now = audioCtx.currentTime;
-            
+            const volume = parseFloat(volumeSlider.value) || 1;
+
             if (type === 'start') {
                 const duration = parseFloat(soundDurationInput.value) || 0.4;
-
-                // 1. 主要聲音 (高頻)
                 const mainOscillator = audioCtx.createOscillator();
                 mainOscillator.type = 'sine';
-                mainOscillator.frequency.setValueAtTime(2500, now); // 哨音基頻
-
-                // 2. LFO (低頻振盪器)，用來產生震動感
+                mainOscillator.frequency.setValueAtTime(2500, now);
+                
                 const lfo = audioCtx.createOscillator();
                 lfo.type = 'square';
-                lfo.frequency.setValueAtTime(40, now); // 震動速度
+                lfo.frequency.setValueAtTime(40, now);
 
-                // 3. LFO的音量控制器，用來控制震動深度
                 const lfoGain = audioCtx.createGain();
-                lfoGain.gain.setValueAtTime(0.25, now);
+                lfoGain.gain.setValueAtTime(0.25 * volume, now);
 
-                // 4. 主要音量控制器
                 const mainGain = audioCtx.createGain();
-                
-                // 連接節點：LFO -> LFO音量 -> 控制主要音量
                 lfo.connect(lfoGain);
                 lfoGain.connect(mainGain.gain);
-
-                // 主要聲音 -> 主要音量 -> 喇叭
                 mainOscillator.connect(mainGain);
                 mainGain.connect(audioCtx.destination);
                 
-                // 5. 設定 "突然停止" 的音量包絡
-                mainGain.gain.setValueAtTime(0.5, now); // 瞬間開始
-                mainGain.gain.setValueAtTime(0, now + duration); // 在指定時間瞬間停止
+                mainGain.gain.setValueAtTime(0.5 * volume, now);
+                mainGain.gain.setValueAtTime(0, now + duration);
 
-                // 啟動與停止
                 lfo.start(now);
                 mainOscillator.start(now);
                 lfo.stop(now + duration);
                 mainOscillator.stop(now + duration);
 
-            } else { // 結束音保持簡單
+            } else {
                 const endOscillator = audioCtx.createOscillator();
                 const endGain = audioCtx.createGain();
                 endOscillator.connect(endGain);
                 endGain.connect(audioCtx.destination);
                 endOscillator.type = 'triangle';
                 endOscillator.frequency.setValueAtTime(440, now);
-                endGain.gain.setValueAtTime(0.5, now);
+                endGain.gain.setValueAtTime(0.5 * volume, now);
                 endGain.gain.exponentialRampToValueAtTime(0.00001, now + 0.2);
                 endOscillator.start(now);
                 endOscillator.stop(now + 0.2);
@@ -357,6 +337,51 @@
             document.getElementById(tabName).style.display = "flex";
             evt.currentTarget.className += " active";
         }
+
+        // --- **新增**: 全螢幕邏輯 ---
+        function toggleFullscreen(event) {
+            const docEl = document.documentElement;
+            const targetId = event.target.dataset.target;
+            const targetElement = document.getElementById(targetId);
+
+            const requestFullscreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+            const exitFullscreen = document.exitFullscreen || document.mozCancelFullScreen || document.webkitExitFullscreen || document.msExitFullscreen;
+            const isFullscreen = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+
+            if (!isFullscreen) {
+                if (targetElement && requestFullscreen) {
+                    requestFullscreen.call(docEl);
+                    event.target.classList.add('fullscreen-toggle-btn');
+                }
+            } else {
+                if (exitFullscreen) {
+                    exitFullscreen.call(document);
+                }
+            }
+        }
+
+        function handleFullscreenChange() {
+            const isFullscreen = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            const toggleBtn = document.querySelector('.fullscreen-toggle-btn');
+
+            if (isFullscreen) {
+                document.body.classList.add('fullscreen-active');
+                if (toggleBtn) toggleBtn.textContent = '縮小';
+            } else {
+                document.body.classList.remove('fullscreen-active');
+                if (toggleBtn) {
+                    toggleBtn.textContent = '最大化';
+                    toggleBtn.classList.remove('fullscreen-toggle-btn');
+                }
+            }
+        }
+
+        document.querySelectorAll('.btn-fullscreen').forEach(button => button.addEventListener('click', toggleFullscreen));
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
 
         // --- 1. 倒數計時器 ---
         const countdownDisplay = document.getElementById('countdown-display');
