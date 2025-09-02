@@ -15,14 +15,14 @@
             /* 主題顏色變數 */
             --background-color: #2c2c2c;
             --text-color: #ffffff;
-            /* **修改**: 優化後的文字大小 */
+            /* 優化後的文字大小 */
             --font-size-display: clamp(10rem, 50vh, 40rem);
             --font-size-stopwatch: clamp(6rem, 28vw, 15rem);
-            --font-size-medium: clamp(1.2rem, 3vw, 2rem);
-            --font-size-small: clamp(0.9rem, 2.5vw, 1.2rem);
+            --font-size-medium: clamp(1.1rem, 2.5vw, 1.8rem);
+            --font-size-small: clamp(0.8rem, 2.2vw, 1.1rem);
         }
 
-        /* **修改**: 媒體查詢，針對寬螢幕/橫向模式極致放大文字 */
+        /* 媒體查詢，針對寬螢幕/橫向模式極致放大文字 */
         @media (min-width: 768px) and (orientation: landscape) {
             :root {
                 --font-size-display: clamp(10rem, 70vh, 70rem);
@@ -43,24 +43,24 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- **修改**: 優化版面配置 --- */
-        .tabs { display: flex; background-color: var(--dark-color); }
+        /* --- 全面纖薄化 --- */
+        .tabs { display: flex; background-color: var(--dark-color); flex-shrink: 0; }
         .tab-button {
-            flex: 1; padding: 12px 10px; cursor: pointer; border: none;
+            flex: 1; padding: 10px 8px; cursor: pointer; border: none;
             background-color: var(--dark-color); color: var(--text-color);
             font-size: var(--font-size-small); transition: background-color 0.3s;
-            border-bottom: 4px solid transparent;
+            border-bottom: 3px solid transparent;
         }
         .tab-button.active {
             background-color: var(--background-color);
-            border-bottom: 4px solid var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
         }
 
         .tab-content {
             display: none; flex-direction: column; align-items: center;
-            justify-content: flex-start; /* **修改**: 讓內容從頂部開始，給數字更多空間 */
-            padding: 10px 20px 20px 20px; box-sizing: border-box;
-            flex-grow: 1; overflow-y: auto;
+            justify-content: flex-start;
+            padding: 5px 20px 15px 20px; box-sizing: border-box;
+            flex-grow: 1; overflow: hidden;
         }
         .tab-content.active { display: flex; }
 
@@ -73,13 +73,16 @@
         
         .controls, .settings {
             display: flex; flex-wrap: wrap; gap: 10px;
-            justify-content: center; width: 100%; padding: 5px 0;
-            flex-shrink: 0; /* 防止被壓縮 */
+            justify-content: center; width: 100%; padding: 8px 0;
+            flex-shrink: 0;
+            /* **新增**: 解決按鈕點擊問題 */
+            position: relative;
+            z-index: 10;
         }
         
         .btn {
-            font-size: var(--font-size-medium); padding: 12px 25px; border-radius: 12px;
-            border: none; cursor: pointer; flex-grow: 1; min-width: 120px;
+            font-size: var(--font-size-medium); padding: 10px 20px; border-radius: 10px;
+            border: none; cursor: pointer; flex-grow: 1; min-width: 100px;
         }
 
         .btn-start { background-color: var(--secondary-color); color: white; }
@@ -89,17 +92,16 @@
         .btn-fullscreen { background-color: #17a2b8; color: white; }
         
         .setting-group {
-            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
         }
         .setting-group label { font-size: var(--font-size-small); color: #ccc; }
         .setting-group input[type="number"], .setting-group input[type="range"], .setting-group select {
-            font-size: var(--font-size-medium); width: 120px; padding: 8px;
+            font-size: var(--font-size-medium); width: 110px; padding: 6px;
             text-align: center; background-color: var(--dark-color);
-            color: var(--text-color); border: 2px solid #555; border-radius: 10px;
+            color: var(--text-color); border: 1px solid #555; border-radius: 8px;
             -webkit-appearance: none; -moz-appearance: none; appearance: none;
         }
-        
-        .setting-group select { width: 144px; } /* 讓下拉選單寬一點 */
+        .setting-group select { width: 134px; text-align-last: center; }
 
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
@@ -109,23 +111,26 @@
         
         #lap-list {
             list-style: none; padding: 0; width: 100%; max-width: 600px; text-align: center;
-            font-size: var(--font-size-small); max-height: 150px; overflow-y: auto;
-            flex-shrink: 0;
+            font-size: var(--font-size-small); max-height: 120px; overflow-y: auto;
+            flex-shrink: 0; margin-top: 5px;
+            position: relative; z-index: 10;
         }
-        #lap-list li { padding: 8px; border-bottom: 1px solid #444; }
+        #lap-list li { padding: 6px; border-bottom: 1px solid #444; }
         #lap-list li:nth-child(even) { background-color: var(--dark-color); }
 
         #interval-inputs {
             display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 500px;
+            max-height: 80px; overflow-y: auto;
         }
-        .interval-input-group { display: flex; align-items: center; gap: 10px; }
+        .interval-input-group { display: flex; align-items: center; justify-content: center; gap: 10px; }
         .interval-input-group input { width: 100px; }
         .btn-add { background-color: var(--primary-color); color: white; font-size: var(--font-size-small); padding: 8px 15px; }
         .btn-remove { background-color: var(--danger-color); color: white; font-size: var(--font-size-small); padding: 8px 15px; }
         
         .status-display {
-            font-size: var(--font-size-medium); font-weight: bold; padding: 5px 0;
-            height: 40px; color: #ccc; flex-shrink: 0;
+            font-size: var(--font-size-medium); font-weight: bold; padding: 2px 0;
+            height: 35px; color: #ccc; flex-shrink: 0;
+            position: relative; z-index: 10;
         }
         
         body.fullscreen-active .tabs,
@@ -192,7 +197,7 @@
 
     <!-- 2. 碼錶 -->
     <div id="stopwatch" class="tab-content">
-        <div id="stopwatch-status" class="status-display" style="height:40px;"></div>
+        <div id="stopwatch-status" class="status-display" style="height:35px;"></div>
         <div class="display-area" id="stopwatch-display">00:00:00</div>
         <div class="controls">
             <button class="btn btn-start" id="stopwatch-start">開始</button>
@@ -209,7 +214,7 @@
         <div class="settings">
             <div id="interval-inputs">
                 <div class="interval-input-group">
-                    <label>時間 1 (秒):</label>
+                    <label>時間 1:</label>
                     <input type="number" class="interval-time" value="10" min="1">
                 </div>
             </div>
@@ -362,259 +367,270 @@
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
         document.addEventListener('mozfullscreenchange', handleFullscreenChange);
         document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-        // --- 1. 倒數計時器 ---
-        const countdownStartBtn = document.getElementById('countdown-start');
-        const countdownPauseBtn = document.getElementById('countdown-pause');
-        const countdownResetBtn = document.getElementById('countdown-reset');
-        const countdownDisplay = document.getElementById('countdown-display');
-        const workTimeInput = document.getElementById('work-time');
-        const restTimeInput = document.getElementById('rest-time');
-        const setsInput = document.getElementById('sets');
-        const statusDisplay = document.getElementById('countdown-status');
-        let countdownTimer, countdownSeconds, totalSets, currentSet;
-        let isWorkTime = true;
-        let countdownState = 'idle'; // idle, running, paused
-
-        function updateCountdownDisplay() {
-            countdownDisplay.textContent = countdownSeconds;
-            statusDisplay.textContent = `組數: ${currentSet} / ${totalSets} | ${isWorkTime ? '訓練' : '休息'}`;
-        }
-
-        function resetCountdown() {
-            clearInterval(countdownTimer);
-            countdownState = 'idle';
-            isWorkTime = true;
-            totalSets = parseInt(setsInput.value);
-            currentSet = 1;
-            countdownSeconds = parseInt(workTimeInput.value);
-            countdownDisplay.textContent = countdownSeconds;
-            statusDisplay.textContent = `組數: ${totalSets}`;
-            countdownStartBtn.style.display = 'block';
-            countdownPauseBtn.style.display = 'none';
-        }
-
-        function countdownTick() {
-            if (countdownSeconds > 1) {
-                countdownSeconds--;
-                updateCountdownDisplay();
-            } else {
-                if (isWorkTime) {
-                    const restTime = parseInt(restTimeInput.value);
-                    if (currentSet >= totalSets && restTime <= 0) {
-                        playSound('end'); statusDisplay.textContent = "完成！"; resetCountdown(); return;
-                    }
-                    if (restTime > 0) {
-                        isWorkTime = false; countdownSeconds = restTime; playSound('start');
-                    } else {
-                        currentSet++; countdownSeconds = parseInt(workTimeInput.value); playSound('start');
-                    }
-                } else {
-                    isWorkTime = true; currentSet++;
-                    if (currentSet > totalSets) {
-                        playSound('end'); statusDisplay.textContent = "完成！"; resetCountdown(); return;
-                    }
-                    countdownSeconds = parseInt(workTimeInput.value); playSound('start');
-                }
-                updateCountdownDisplay();
-            }
-        }
-
-        countdownStartBtn.addEventListener('click', () => {
-            unlockAudio();
-            if (countdownState === 'idle') {
-                resetCountdown();
-                playSound('start');
-            }
-            countdownState = 'running';
-            countdownTimer = setInterval(countdownTick, 1000);
-            countdownStartBtn.style.display = 'none';
-            countdownPauseBtn.style.display = 'block';
-            countdownPauseBtn.textContent = '暫停';
-        });
-
-        countdownPauseBtn.addEventListener('click', () => {
-            if (countdownState === 'running') {
-                clearInterval(countdownTimer);
-                countdownState = 'paused';
-                countdownPauseBtn.textContent = '繼續';
-            } else if (countdownState === 'paused') {
-                countdownState = 'running';
-                countdownTimer = setInterval(countdownTick, 1000);
-                countdownPauseBtn.textContent = '暫停';
-            }
-        });
         
-        countdownResetBtn.addEventListener('click', resetCountdown);
-        [workTimeInput, restTimeInput, setsInput].forEach(el => el.addEventListener('change', resetCountdown));
-        resetCountdown();
+        // --- 1. 倒數計時器 ---
+        (() => {
+            const startBtn = document.getElementById('countdown-start');
+            const pauseBtn = document.getElementById('countdown-pause');
+            const resetBtn = document.getElementById('countdown-reset');
+            const display = document.getElementById('countdown-display');
+            const workInput = document.getElementById('work-time');
+            const restInput = document.getElementById('rest-time');
+            const setsInput = document.getElementById('sets');
+            const statusDisplay = document.getElementById('countdown-status');
+            
+            let timer, seconds, totalSets, currentSet;
+            let isWorkTime = true;
+            let state = 'idle'; // idle, running, paused
 
+            function updateDisplay() {
+                display.textContent = seconds;
+                statusDisplay.textContent = `組數: ${currentSet} / ${totalSets} | ${isWorkTime ? '訓練' : '休息'}`;
+            }
+
+            function reset() {
+                clearInterval(timer);
+                state = 'idle';
+                isWorkTime = true;
+                totalSets = parseInt(setsInput.value);
+                currentSet = 1;
+                seconds = parseInt(workInput.value);
+                display.textContent = seconds;
+                statusDisplay.textContent = `組數: ${totalSets}`;
+                startBtn.style.display = 'block';
+                pauseBtn.style.display = 'none';
+            }
+
+            function tick() {
+                if (seconds > 1) {
+                    seconds--;
+                    updateDisplay();
+                } else {
+                    if (isWorkTime) {
+                        const rest = parseInt(restInput.value);
+                        if (currentSet >= totalSets && rest <= 0) {
+                            playSound('end'); statusDisplay.textContent = "完成！"; reset(); return;
+                        }
+                        if (rest > 0) {
+                            isWorkTime = false; seconds = rest; playSound('start');
+                        } else {
+                            currentSet++; seconds = parseInt(workInput.value); playSound('start');
+                        }
+                    } else {
+                        isWorkTime = true; currentSet++;
+                        if (currentSet > totalSets) {
+                            playSound('end'); statusDisplay.textContent = "完成！"; reset(); return;
+                        }
+                        seconds = parseInt(workInput.value); playSound('start');
+                    }
+                    updateDisplay();
+                }
+            }
+
+            startBtn.addEventListener('click', () => {
+                unlockAudio();
+                if (state === 'idle') {
+                    reset();
+                    playSound('start');
+                }
+                state = 'running';
+                timer = setInterval(tick, 1000);
+                startBtn.style.display = 'none';
+                pauseBtn.style.display = 'block';
+                pauseBtn.textContent = '暫停';
+            });
+
+            pauseBtn.addEventListener('click', () => {
+                if (state === 'running') {
+                    clearInterval(timer);
+                    state = 'paused';
+                    pauseBtn.textContent = '繼續';
+                } else if (state === 'paused') {
+                    state = 'running';
+                    timer = setInterval(tick, 1000);
+                    pauseBtn.textContent = '暫停';
+                }
+            });
+
+            resetBtn.addEventListener('click', reset);
+            [workInput, restInput, setsInput].forEach(el => el.addEventListener('change', reset));
+            reset();
+        })();
 
         // --- 2. 碼錶 ---
-        const stopwatchStartBtn = document.getElementById('stopwatch-start');
-        const stopwatchPauseBtn = document.getElementById('stopwatch-pause');
-        const stopwatchResetBtn = document.getElementById('stopwatch-reset');
-        const stopwatchDisplay = document.getElementById('stopwatch-display');
-        const lapList = document.getElementById('lap-list');
-        let stopwatchTimer, stopwatchStartTime, stopwatchElapsedTime = 0, lapCounter = 0;
-        let stopwatchState = 'idle';
+        (() => {
+            const startBtn = document.getElementById('stopwatch-start');
+            const pauseBtn = document.getElementById('stopwatch-pause');
+            const resetBtn = document.getElementById('stopwatch-reset');
+            const display = document.getElementById('stopwatch-display');
+            const lapList = document.getElementById('lap-list');
+            
+            let timer, startTime, elapsedTime = 0, lapCounter = 0;
+            let state = 'idle';
 
-        function formatTime(ms) {
-            const date = new Date(ms);
-            const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-            const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-            const milliseconds = String(Math.floor(date.getUTCMilliseconds() / 10)).padStart(2, '0');
-            return `${minutes}:${seconds}:${milliseconds}`;
-        }
-        function updateStopwatch() {
-            stopwatchElapsedTime = Date.now() - stopwatchStartTime;
-            stopwatchDisplay.textContent = formatTime(stopwatchElapsedTime);
-        }
-        function resetStopwatch() {
-            clearInterval(stopwatchTimer);
-            stopwatchState = 'idle';
-            stopwatchElapsedTime = 0; lapCounter = 0;
-            stopwatchDisplay.textContent = '00:00:00';
-            lapList.innerHTML = '';
-            stopwatchStartBtn.style.display = 'block';
-            stopwatchPauseBtn.style.display = 'none';
-        }
-
-        stopwatchStartBtn.addEventListener('click', () => {
-            unlockAudio();
-            if (stopwatchState === 'idle') playSound('start');
-            stopwatchState = 'running';
-            stopwatchStartTime = Date.now() - stopwatchElapsedTime;
-            stopwatchTimer = setInterval(updateStopwatch, 10);
-            stopwatchStartBtn.style.display = 'none';
-            stopwatchPauseBtn.style.display = 'block';
-            stopwatchPauseBtn.textContent = '暫停';
-        });
-
-        stopwatchPauseBtn.addEventListener('click', () => {
-            if (stopwatchState === 'running') {
-                clearInterval(stopwatchTimer);
-                stopwatchState = 'paused';
-                stopwatchPauseBtn.textContent = '繼續';
-            } else if (stopwatchState === 'paused') {
-                stopwatchState = 'running';
-                stopwatchStartTime = Date.now() - stopwatchElapsedTime;
-                stopwatchTimer = setInterval(updateStopwatch, 10);
-                stopwatchPauseBtn.textContent = '暫停';
+            function formatTime(ms) {
+                const d = new Date(ms);
+                return `${String(d.getUTCMinutes()).padStart(2, '0')}:${String(d.getUTCSeconds()).padStart(2, '0')}:${String(Math.floor(d.getUTCMilliseconds() / 10)).padStart(2, '0')}`;
             }
-        });
 
-        stopwatchResetBtn.addEventListener('click', resetStopwatch);
-        document.getElementById('stopwatch-lap').addEventListener('click', () => {
-            if (stopwatchState === 'running') {
-                lapCounter++;
-                const li = document.createElement('li');
-                li.textContent = `計次 ${lapCounter}: ${formatTime(stopwatchElapsedTime)}`;
-                lapList.prepend(li);
+            function tick() {
+                display.textContent = formatTime(Date.now() - startTime);
             }
-        });
-        resetStopwatch();
 
-        // --- 3. 多重計時器 ---
-        const intervalStartBtn = document.getElementById('interval-start');
-        const intervalPauseBtn = document.getElementById('interval-pause');
-        const intervalResetBtn = document.getElementById('interval-reset');
-        const intervalDisplay = document.getElementById('interval-display');
-        const intervalSetsInput = document.getElementById('interval-sets');
-        const intervalStatus = document.getElementById('interval-status');
-        const intervalInputsContainer = document.getElementById('interval-inputs');
-        let intervalTimer, intervalTimes = [], currentIntervalIndex = 0, intervalCurrentSet = 1, intervalTotalSets, intervalSeconds;
-        let intervalState = 'idle';
-        
-        function updateIntervalDisplay() {
-            intervalDisplay.textContent = intervalSeconds;
-            intervalStatus.textContent = `組數: ${intervalCurrentSet} / ${intervalTotalSets} | 階段: ${currentIntervalIndex + 1}`;
-        }
-        function collectIntervalTimes() {
-            intervalTimes = [];
-            const inputs = document.querySelectorAll('.interval-time');
-            inputs.forEach(input => {
-                const val = parseInt(input.value);
-                if (!isNaN(val) && val > 0) intervalTimes.push(val);
+            function reset() {
+                clearInterval(timer);
+                state = 'idle';
+                elapsedTime = 0;
+                lapCounter = 0;
+                display.textContent = '00:00:00';
+                lapList.innerHTML = '';
+                startBtn.style.display = 'block';
+                pauseBtn.style.display = 'none';
+            }
+
+            startBtn.addEventListener('click', () => {
+                unlockAudio();
+                if(state === 'idle') playSound('start');
+                state = 'running';
+                startTime = Date.now() - elapsedTime;
+                timer = setInterval(tick, 10);
+                startBtn.style.display = 'none';
+                pauseBtn.style.display = 'block';
+                pauseBtn.textContent = '暫停';
             });
-        }
-        function resetInterval() {
-            clearInterval(intervalTimer);
-            intervalState = 'idle';
-            collectIntervalTimes();
-            intervalTotalSets = parseInt(intervalSetsInput.value);
-            intervalCurrentSet = 1;
-            currentIntervalIndex = 0;
-            intervalSeconds = intervalTimes[0] || 0;
-            intervalDisplay.textContent = intervalSeconds;
-            intervalStatus.textContent = `組數: ${intervalTotalSets}`;
-            intervalStartBtn.style.display = 'block';
-            intervalPauseBtn.style.display = 'none';
-        }
-        function intervalTick() {
-             if (intervalSeconds > 1) {
-                intervalSeconds--;
-                updateIntervalDisplay();
-            } else {
-                currentIntervalIndex++;
-                if (currentIntervalIndex >= intervalTimes.length) {
-                    currentIntervalIndex = 0;
-                    intervalCurrentSet++;
-                    if (intervalCurrentSet > intervalTotalSets) {
-                         playSound('end'); intervalStatus.textContent = '完成！'; resetInterval(); return;
-                    }
+
+            pauseBtn.addEventListener('click', () => {
+                if (state === 'running') {
+                    clearInterval(timer);
+                    elapsedTime = Date.now() - startTime;
+                    state = 'paused';
+                    pauseBtn.textContent = '繼續';
+                } else if (state === 'paused') {
+                    state = 'running';
+                    startTime = Date.now() - elapsedTime;
+                    timer = setInterval(tick, 10);
+                    pauseBtn.textContent = '暫停';
                 }
-                intervalSeconds = intervalTimes[currentIntervalIndex];
-                playSound('start');
-                updateIntervalDisplay();
-            }
-        }
-
-        intervalStartBtn.addEventListener('click', () => {
-            unlockAudio();
-            if (intervalState === 'idle') {
-                resetInterval();
-                if (intervalTimes.length === 0) return;
-                playSound('start');
-            }
-            intervalState = 'running';
-            intervalTimer = setInterval(intervalTick, 1000);
-            intervalStartBtn.style.display = 'none';
-            intervalPauseBtn.style.display = 'block';
-            intervalPauseBtn.textContent = '暫停';
-        });
-
-        intervalPauseBtn.addEventListener('click', () => {
-            if (intervalState === 'running') {
-                clearInterval(intervalTimer);
-                intervalState = 'paused';
-                intervalPauseBtn.textContent = '繼續';
-            } else if (intervalState === 'paused') {
-                intervalState = 'running';
-                intervalTimer = setInterval(intervalTick, 1000);
-                intervalPauseBtn.textContent = '暫停';
-            }
-        });
-
-        intervalResetBtn.addEventListener('click', resetInterval);
-        document.getElementById('add-interval').addEventListener('click', () => {
-            const count = intervalInputsContainer.children.length + 1;
-            const newGroup = document.createElement('div');
-            newGroup.className = 'interval-input-group';
-            newGroup.innerHTML = `<label>時間 ${count} (秒):</label><input type="number" class="interval-time" value="10" min="1"><button class="btn-remove">移除</button>`;
-            intervalInputsContainer.appendChild(newGroup);
-            newGroup.querySelector('.btn-remove').addEventListener('click', (e) => {
-                e.target.parentElement.remove();
-                intervalInputsContainer.querySelectorAll('label').forEach((label, index) => {
-                    label.textContent = `時間 ${index + 1} (秒):`;
-                });
-                resetInterval();
             });
-            resetInterval();
-        });
-        intervalSetsInput.addEventListener('change', resetInterval);
-        intervalInputsContainer.addEventListener('change', resetInterval);
-        resetInterval();
+
+            resetBtn.addEventListener('click', reset);
+            document.getElementById('stopwatch-lap').addEventListener('click', () => {
+                if (state === 'running') {
+                    lapCounter++;
+                    const li = document.createElement('li');
+                    li.textContent = `計次 ${lapCounter}: ${display.textContent}`;
+                    lapList.prepend(li);
+                }
+            });
+            reset();
+        })();
+        
+        // --- 3. 多重計時器 ---
+        (() => {
+            const startBtn = document.getElementById('interval-start');
+            const pauseBtn = document.getElementById('interval-pause');
+            const resetBtn = document.getElementById('interval-reset');
+            const display = document.getElementById('interval-display');
+            const setsInput = document.getElementById('interval-sets');
+            const statusDisplay = document.getElementById('interval-status');
+            const inputsContainer = document.getElementById('interval-inputs');
+
+            let timer, times = [], currentIndex, currentSet, totalSets, seconds;
+            let state = 'idle';
+            
+            function updateDisplay() {
+                display.textContent = seconds;
+                if (times.length > 0) {
+                    statusDisplay.textContent = `組數: ${currentSet} / ${totalSets} | 階段: ${currentIndex + 1}`;
+                } else {
+                    statusDisplay.textContent = `組數: ${totalSets}`;
+                }
+            }
+
+            function collectTimes() {
+                times = [];
+                document.querySelectorAll('#interval .interval-time').forEach(input => {
+                    const val = parseInt(input.value);
+                    if (!isNaN(val) && val > 0) times.push(val);
+                });
+            }
+
+            function reset() {
+                clearInterval(timer);
+                state = 'idle';
+                collectTimes();
+                totalSets = parseInt(setsInput.value);
+                currentSet = 1;
+                currentIndex = 0;
+                seconds = times[0] || 0;
+                updateDisplay();
+            }
+
+            function tick() {
+                if (seconds > 1) {
+                    seconds--;
+                    updateDisplay();
+                } else {
+                    currentIndex++;
+                    if (currentIndex >= times.length) {
+                        currentIndex = 0;
+                        currentSet++;
+                        if (currentSet > totalSets) {
+                            playSound('end'); statusDisplay.textContent = '完成！'; reset(); return;
+                        }
+                    }
+                    seconds = times[currentIndex];
+                    playSound('start');
+                    updateDisplay();
+                }
+            }
+
+            startBtn.addEventListener('click', () => {
+                unlockAudio();
+                if (state === 'idle') {
+                    reset();
+                    if (times.length === 0) return;
+                    playSound('start');
+                }
+                state = 'running';
+                timer = setInterval(tick, 1000);
+                startBtn.style.display = 'none';
+                pauseBtn.style.display = 'block';
+                pauseBtn.textContent = '暫停';
+            });
+
+            pauseBtn.addEventListener('click', () => {
+                if (state === 'running') {
+                    clearInterval(timer);
+                    state = 'paused';
+                    pauseBtn.textContent = '繼續';
+                } else if (state === 'paused') {
+                    state = 'running';
+                    timer = setInterval(tick, 1000);
+                    pauseBtn.textContent = '暫停';
+                }
+            });
+
+            resetBtn.addEventListener('click', reset);
+            document.getElementById('add-interval').addEventListener('click', () => {
+                const count = inputsContainer.children.length + 1;
+                const newGroup = document.createElement('div');
+                newGroup.className = 'interval-input-group';
+                newGroup.innerHTML = `<label>時間 ${count}:</label><input type="number" class="interval-time" value="10" min="1"><button class="btn-remove">移除</button>`;
+                inputsContainer.appendChild(newGroup);
+                newGroup.querySelector('.btn-remove').addEventListener('click', (e) => {
+                    e.target.parentElement.remove();
+                    inputsContainer.querySelectorAll('label').forEach((label, index) => {
+                        label.textContent = `時間 ${index + 1}:`;
+                    });
+                    reset();
+                });
+                reset();
+            });
+            setsInput.addEventListener('change', reset);
+            inputsContainer.addEventListener('change', reset);
+            reset();
+        })();
 
     </script>
 </body>
